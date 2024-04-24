@@ -1,0 +1,127 @@
+---
+title: "WAR and Migration"
+subtitle: "Unravelling the Migration Mysteries of Ukraine, Kuwait and beyond"
+author: "Cian McCabe"
+date: "2024-04-23"
+format: html
+theme: sandstone
+toc: true
+backgroundcolor: lightgrey
+execute: 
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#|label: setup
+#| include: false
+
+#libraries
+library(tidyverse)
+library(plotly)
+
+#data
+unicef_indicator_22 <- read_csv("unicef_indicator_22.csv")
+
+#transformations
+obs_value_2023 <-unicef_indicator_22 %>%
+  filter(time_period ==2023)
+map_world <- map_data("world")
+map_obs_value_2023 <- full_join(map_world, obs_value_2023, by = c("region" = "country"))
+
+```
+
+## **Introduction**
+This detailed map provides an understanding of the **Net Migration rate** (per 1,000) per country, and the effect ***War*** has on this. In this report I will examine this in detail by making references to two examples which clearly portray this issue: *Kuwait* and most recently *Ukraine* (which many of you will be familiar with).
+
+## Snapshot of the current **Net Migration rate's** in *the World*. 
+```{r}
+map_world <- map_data("world")
+
+ggplot(map_obs_value_2023) +
+  aes(x = long, y = lat, group = group, fill = obs_value) +
+  geom_polygon() +
+  labs(title = "Net Migration Rate 2023")
+```
+
+Here is the **Net Migration rate** per country in the year just gone by. It can be seen in the centre of the map, *Ukraine* stands-out in its light blue shade. This sparks an interest to deepen our under understanding as to why this is the case.
+
+
+
+## **Exploration of Patterns**
+
+```{r}
+ p <- ggplot(data = unicef_indicator_22) +
+  aes(x = time_period, y = obs_value, color = Continent) +
+  geom_line() +
+  theme_classic() +
+  labs(x = "Time Period", y = "Net Migration Rate Value", title = "Evolution of Net Migration Rate per Continent.", subtitle = "Biggest Outlier in continent per year")
+interactive_plot <- ggplotly(p)
+interactive_plot
+
+```
+
+When we compare the **Net Migration** rate across continents by examining the biggest outlier per continent in a given year across this time-series chart, there is particular outliers in some cases such as *Kuwait* in 1990, and the above menioned *Ukraine* is the most recent oultlier, under their respected continents. These are both as a result of ***War***, as is the majority of the major outliers in this case. This interactive chart allows you to identify the specific continent and year, which can guide you towards examining the topic in more detail independently. 
+
+
+## ***Ukraine*** and ***Kuwait***
+
+```{r}
+filtered_data <- unicef_indicator_22 %>%
+  filter(country %in% c("Ukraine", "Kuwait"))
+ggplot(filtered_data) +
+  aes(time_period, obs_value, color = country) +
+  geom_point() +
+  labs(
+    x = "Net Migration Rate Value",
+    y = "Time Period",
+    title = "Ukraine and Kuwait and the impact of war on Net Migration Rate."
+  ) +
+  geom_smooth(method = "lm") +
+  theme_classic()
+```
+
+When we take *Kuwait* and *Ukraine* on their own, we can greater identify the abnormality of these events. We can see clearly the massive impact ***War*** has on the **Net Migration Rate** of the examined countries. The trend is nice and compact prior to the war, before it shoots down once the war occurs. 
+
+```{r}
+#bar chart 1
+filtered_data2 <- unicef_indicator_22 %>%
+  filter(country %in% c("Kuwait", "Oman", "Saudi Arabia", "United Arab Emirates") & 
+           time_period ==  1990)
+ ggplot(filtered_data2) +
+         aes(x = country, y = obs_value, fill = country) +  # Set fill to distinguish bars
+         geom_bar(stat = "identity") +  # Bar chart with value specified by 'obs_value'
+         labs(
+           title = "Observation Values in 1990 for Kuwait and selected neighbouring countries",
+           x = "Country",
+           y = "Net Migration Rate"
+         ) +
+         theme_minimal() +
+         geom_bar(stat = "identity") +
+         geom_text(aes(label = round(obs_value, 1)), vjust = -0.5)
+#bar chart 2
+filtered_data3 <- unicef_indicator_22 %>%
+  filter(country %in% c("Ukraine", "Hungary", "Poland", "Romania", "Slovakia") & 
+           time_period == 2022)
+ggplot(filtered_data3) +
+  aes(x = country, y = obs_value, fill = country) +  # Set fill to distinguish bars
+  geom_bar(stat = "identity") +  # Bar chart with value specified by 'obs_value'
+  labs(
+    title = "Observation Values in 2022 for Ukraine and selected neighboring countries",
+    x = "Country",
+    y = "Net Migration Rate"
+  ) +
+  theme_minimal()+
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(obs_value, 1)), vjust = -0.5)
+
+```
+Additionally, when we compare this to some of their neighbouring countries at the time, we see how their **Net Migration Rates** increase as the effected countries majorily decrease. People are fleeing the countries and these neighboring countries therefore offer refugee for the effected population. While they don't account for the entire number of people who leave the country, both countries and their neighbors follow  the same pattern as seen above, with many setttling with neighbors. 
+
+
+
+
+##  **Conclusion**
+In conclusion, it is evident that ***War*** greatly effects the **Pattern of Migration** with it's effected countries and also has a knock-on effect on their neighbouring countries in particular. 
+I hope you enjoyed this report and found it insightful!
